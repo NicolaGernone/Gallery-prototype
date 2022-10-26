@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+    api:
+        container_name: api-flask
+        depends_on:
+            postgres-skeleton-db:
+                condition: service_healthy
+        build:
+            context: .
+            dockerfile: docker/Dockerfile
+        env_file:
+            - dev.env
+        volumes:
+            -   "${PWD}:/opt/app"
+        stdin_open: true   # Add this line into your service
+        tty: true 
+        ports:
+            -   "5050:5050"
+        networks:
+            internal-net:
+
+    postgres-skeleton-db:
+        container_name: postgres-skeleton-db
+        image: postgres:13.4-alpine
+        restart: on-failure
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        volumes:
+            - rv-volume:/var/lib/postgresql/data
+        env_file:
+            - dev.env
+        networks:
+            internal-net:
+
+volumes:
+    rv-volume:
+
+networks:
+    internal-net:
+        name: rv-skeleton-net

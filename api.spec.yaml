@@ -1,0 +1,127 @@
+openapi: 3.0.0
+info:
+  title: Gallery Optimizer API
+  description: |
+    Gallery Optimizer API is a REST API responsible of showing the images for an e-commerce, where the users could see some pictures and interact with them. To provide a better experience, and conversion of the gallery, the API is collecting some user' events and optimizing the grid in terms of the interaction that the different images are having. 
+
+  version: 1.0.
+paths:
+  /images/{imageId}/events:
+    post:
+      summary: |
+        This endpoint is called every time an image receives some event on it (view, or click). These events will be the ones used to optimize the gallery grid later.
+      parameters:
+        - name: imageId
+          description: The image ID where the event occurred.
+          required: true
+          in: path
+          schema:
+            type: string
+
+      requestBody:
+        description: Payload with the event info
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventBody'
+
+      responses:
+        '204':
+          description: Event received
+        '400':
+          description: There request payload is not well formed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: There was an error parsing the given request
+
+        '404':
+          description: There are no image with the specified ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: There are no image with the specified ID
+
+
+  /images:
+    get:
+      summary: |
+        This endpoint will return all the images related to the gallery to be displayed on the gallery.
+        
+        The resulted images have to be optimized to obtain the best Conversion Rate of each one through the gallery. To do so, we have to calculate an image weight for each one, based on the events received.
+        
+          Wi = [total_views * 0.3] + [total_clicks * 0.7]
+
+      responses:
+        '200':
+          description: Case they have been registered through the realtime enpdoint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImagesGridResponse'
+
+        '404':
+          description: Case they are not registered
+
+components:
+
+  schemas:
+    TrackEventBody:
+      type: object
+      required:
+        - eventType
+        - timestamp
+      properties:
+        eventType:
+          type: string
+          enum: ['view', 'click']
+        timestamp:
+          type: string
+          format: date-time
+
+    ImagesGridResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ImageInfo'
+
+
+    ImageInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Blue sofa'
+        weight:
+          type: number
+          example: 6.5
+        url:
+          type: string
+          format: url
+          example: 'https://fff'
+        categories:
+          type: string
+          example: 'nature'
+        gridPosition:
+          type: number
+          example: 1
+        events:
+          type: object
+          properties:
+            views:
+              type: number
+              example: 10
+            clicks:
+              type: number
+              example: 5
