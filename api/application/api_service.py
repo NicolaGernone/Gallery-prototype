@@ -5,6 +5,7 @@ from sqlite3 import DatabaseError
 from typing import Dict
 from django.http import HttpRequest
 from .domain.utilities.image_weight import ImageWeightCalculator as WC
+from .domain.utilities.sort_image_list import ImageSorter as ISR
 
 class ApiService:
 
@@ -20,7 +21,8 @@ class ApiService:
                 for dicto in list_of_images:
                     cursor.execute("SELECT view, click FROM events RIGHT OUTER JOIN images ON events.image_id = %s AND events.user_id = %s", (dicto["id"], request.user.id))
                     dicto.update({'events': self.dictfetchone(cursor)})
-                sorted_list = sorted(list_of_images, key=lambda i: i['weight'] if i['weight'] is not None else Decimal(0.0) , reverse=True)
+                sorter = ISR(list_of_images)
+                sorted_list = ISR.sorter
                 return { 'data' : sorted_list}
             else:
                 raise DatabaseError("There are no images in the DB")
@@ -53,8 +55,8 @@ class ApiService:
                 raise DatabaseError("There are no image with the specified ID")
         return {}
 
-    @classmethod
-    def dictfetchall(cls, cursor):
+    @staticmethod
+    def dictfetchall(self, cursor):
         #Return all rows from a cursor as a dict
         columns = [col[0] for col in cursor.description]
         return [
@@ -62,8 +64,8 @@ class ApiService:
             for row in cursor.fetchall()
         ]
 
-    @classmethod
-    def dictfetchone(cls, cursor):
+    @staticmethod
+    def dictfetchone(self, cursor):
         #Return one row from a cursor as a dict
         columns = [col[0] for col in cursor.description]
         return dict(zip(columns, cursor.fetchone()))

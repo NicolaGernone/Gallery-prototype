@@ -1,4 +1,6 @@
-@data_class
+from dataclasses import dataclass
+
+@dataclass
 class ImageWeightCalculator:
     data: dict
     
