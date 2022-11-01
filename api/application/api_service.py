@@ -4,6 +4,7 @@ import json
 from sqlite3 import DatabaseError
 from typing import Dict
 from django.http import HttpRequest
+from .domain.utilities.image_weight import ImageWeightCalculator as WC
 
 class ApiService:
 
@@ -37,7 +38,8 @@ class ApiService:
                     cursor.execute("SELECT * FROM events WHERE image_id = %s AND user_id = %s", (imageId, request.user.id))
                     data = self.dictfetchone(cursor)
                     data[body['eventType']] = data[body['eventType']] + 1
-                    weight = self.weight_calculator(data)
+                    weight_obj = WS(data)
+                    weight = weight_obj.weight_calculator
                     cursor.execute("UPDATE events SET " + body['eventType'] + "= %s, weight = %s, updated_at = %s WHERE image_id = %s AND user_id = %s", (data[body['eventType']], weight, datetime.datetime.fromtimestamp(body['timestamp']), imageId, request.user.id))
                 elif body:
                     #if there are no event registered insert a new record.
@@ -66,7 +68,4 @@ class ApiService:
         columns = [col[0] for col in cursor.description]
         return dict(zip(columns, cursor.fetchone()))
 
-    @cached_property
-    def weight_calculator(self, data):
-        weight = data['click'] * 0.7 + data['view'] * 0.3
-        return weight
+    
