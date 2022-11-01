@@ -66,7 +66,7 @@ class ApiService:
         columns = [col[0] for col in cursor.description]
         return dict(zip(columns, cursor.fetchone()))
 
-    @classmethod
-    def weight_calculator(cls, data):
+    @cached_property
+    def weight_calculator(self, data):
         weight = data['click'] * 0.7 + data['view'] * 0.3
         return weight
