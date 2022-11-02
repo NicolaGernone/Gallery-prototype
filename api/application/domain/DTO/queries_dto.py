@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from tokenize import String
 
 from api.application.domain.event_types import EventType
 
