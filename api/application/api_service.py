@@ -1,11 +1,14 @@
 import datetime
 import json
-from sqlite3 import DatabaseError
+from django.db import DatabaseError
 from typing import Dict
+
 from django.http import HttpRequest
+
+from .domain.event_types import EventType as et
 from .domain.utilities.image_weight import weight_calculator
 from .domain.utilities.sort_image_list import sorter
-from .domain.event_types import EventType as et
+
 
 class ApiService:
 
