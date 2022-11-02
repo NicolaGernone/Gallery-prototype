@@ -54,7 +54,7 @@ class ApiService:
                     raise DatabaseError("There are no event to record")
             else:
                 raise DatabaseError("There are no image with the specified ID")
-        return {}
+        return
 
     @staticmethod
     def dictfetchall(self, cursor):

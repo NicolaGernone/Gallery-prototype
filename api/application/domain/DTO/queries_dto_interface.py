@@ -14,3 +14,11 @@ class QueryDtoInterface(ABC):
     @abstractmethod
     def existence(self):
         raise DatabaseError
+
+    @abstractmethod
+    def update_record(self):
+        raise DatabaseError
+
+    @abstractmethod
+    def create_record(self):
+        raise DatabaseError

@@ -1,19 +1,23 @@
-from sqlite3 import DatabaseError
-from django.db import connection
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views import View
-from django.shortcuts import render
-from django.http import HttpResponse, HttpRequest
-from rest_framework import status
+from django.db import DatabaseError
+
 from api.application.api_service import ApiService
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.db import connection
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import render
+from django.views import View
+from rest_framework import status
 
 
 class ApiView(View):
 
     def __init__(self, api_service=ApiService(connection)):
         self.service = api_service
-
+    
+    user = get_user_model()
+    
+    @login_required
     def get(self, request: HttpRequest) -> HttpResponse:
         template = "gallery.html"
         try:
