@@ -1,11 +1,11 @@
 import datetime
-from decimal import Decimal
 import json
 from sqlite3 import DatabaseError
 from typing import Dict
 from django.http import HttpRequest
-from .domain.utilities.image_weight import ImageWeightCalculator as WC
-from .domain.utilities.sort_image_list import ImageSorter as ISR
+from .domain.utilities.image_weight import weight_calculator
+from .domain.utilities.sort_image_list import sorter
+from .domain.event_types import EventType as et
 
 class ApiService:
 
@@ -21,8 +21,7 @@ class ApiService:
                 for dicto in list_of_images:
                     cursor.execute("SELECT view, click FROM events RIGHT OUTER JOIN images ON events.image_id = %s AND events.user_id = %s", (dicto["id"], request.user.id))
                     dicto.update({'events': self.dictfetchone(cursor)})
-                sorter = ISR(list_of_images)
-                sorted_list = ISR.sorter
+                sorted_list = sorter(list_of_images)
                 return { 'data' : sorted_list}
             else:
                 raise DatabaseError("There are no images in the DB")
@@ -40,14 +39,13 @@ class ApiService:
                     cursor.execute("SELECT * FROM events WHERE image_id = %s AND user_id = %s", (imageId, request.user.id))
                     data = self.dictfetchone(cursor)
                     data[body['eventType']] = data[body['eventType']] + 1
-                    weight_obj = WS(data)
-                    weight = weight_obj.weight_calculator
+                    weight = weight_calculator(data)
                     cursor.execute("UPDATE events SET " + body['eventType'] + "= %s, weight = %s, updated_at = %s WHERE image_id = %s AND user_id = %s", (data[body['eventType']], weight, datetime.datetime.fromtimestamp(body['timestamp']), imageId, request.user.id))
                 elif body:
                     #if there are no event registered insert a new record.
-                    if body['eventType'].lower() == 'click':
+                    if body['eventType'].lower() == et.click:
                         cursor.execute("INSERT INTO events (user_id, image_id, view, click, weight, updated_at) VALUES (%s, %s, %s, %s, %s, %s)", ( request.user.id, imageId, 0, 1, 0.7, datetime.datetime.fromtimestamp(body['timestamp'])))
-                    elif body['eventType'].lower() == 'view':
+                    elif body['eventType'].lower() == et.view:
                         cursor.execute("INSERT INTO events (user_id, image_id, view, click, weight, updated_at) VALUES (%s, %s, %s, %s, %s, %s)", ( request.user.id, imageId, 1, 0, 0.3, datetime.datetime.fromtimestamp(body['timestamp'])))
                 else:
                     raise DatabaseError("There are no event to record")
